@@ -1,0 +1,16 @@
+[
+  {
+    "id": "katzs",
+    "name": "Katz's Delicatessen",
+    "neighborhood": "Lower East Side",
+    "lat": 40.7223,
+    "lng": -73.9874
+  },
+  {
+    "id": "joes-pizza-carmine",
+    "name": "Joe's Pizza",
+    "neighborhood": "Greenwich Village",
+    "lat": 40.7305,
+    "lng": -74.0021
+  }
+]
