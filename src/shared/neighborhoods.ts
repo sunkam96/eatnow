@@ -88,6 +88,10 @@ export function isNeighborhoodId(value: unknown): value is string {
   return typeof value === 'string' && byId.has(value)
 }
 
+export function getNeighborhood(id: string): Neighborhood | undefined {
+  return byId.get(id)
+}
+
 export function neighborhoodName(id: string): string {
   return byId.get(id)?.name ?? 'somewhere'
 }

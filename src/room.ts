@@ -1,5 +1,6 @@
 import { ApiError, fetchRoom, joinRoom } from './api'
 import { CLOSES_HOURS_AFTER_DINNER, MAX_MEMBERS, NAME_MAX_LENGTH, type RoomView } from './shared/api'
+import type { RoomMap } from './map'
 import { neighborhoodName } from './shared/neighborhoods'
 import { clearToken, loadToken, saveToken } from './token'
 import { describeArea, el, field, formatWhen, neighborhoodSelect } from './ui'
@@ -17,8 +18,14 @@ export function renderRoom(hero: HTMLElement, roomId: string) {
   let membersList: HTMLUListElement | null = null
   let countLine: HTMLParagraphElement | null = null
   let statusLine: HTMLParagraphElement | null = null
+  let roomMap: RoomMap | null = null
+  let latestRoom: RoomView | null = null
 
-  const show = (...nodes: Node[]) => hero.replaceChildren(...nodes)
+  const show = (...nodes: Node[]) => {
+    roomMap?.destroy()
+    roomMap = null
+    hero.replaceChildren(...nodes)
+  }
   const isMember = (room: RoomView) => room.members.some((m) => m.you)
 
   function planNewButton(label = 'Plan a new dinner') {
@@ -151,15 +158,25 @@ export function renderRoom(hero: HTMLElement, roomId: string) {
     const share = el('button', { className: 'cta', type: 'button', textContent: 'Share link' })
     share.onclick = () => shareLink(share, room)
 
+    const mapBox = el('div', { className: 'room-map' })
+
     show(
       el('h1', { textContent: titleOf(room) }),
       el('p', { className: 'tagline', textContent: detailsOf(room) }),
+      mapBox,
       countLine,
       membersList,
       share,
       el('p', { className: 'muted', textContent: 'Waiting for everyone. Picking a spot comes next.' }),
       statusLine,
     )
+    latestRoom = room
+    // Leaflet is only needed here, so it's loaded on demand to keep the landing page light.
+    import('./map')
+      .then(({ createRoomMap }) => {
+        if (mapBox.isConnected && latestRoom) roomMap = createRoomMap(mapBox, latestRoom)
+      })
+      .catch(() => mapBox.remove())
     updateMembers(room)
     startPolling()
   }
@@ -177,6 +194,8 @@ export function renderRoom(hero: HTMLElement, roomId: string) {
         )
       }),
     )
+    latestRoom = room
+    roomMap?.update(room)
     const n = room.members.length
     countLine.textContent = `${n} coming · room for ${MAX_MEMBERS}`
   }

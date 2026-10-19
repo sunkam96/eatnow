@@ -206,3 +206,29 @@ button.cta {
   min-height: 1.2em;
   font-size: 0.85rem;
 }
+
+.room-map {
+  width: 100%;
+  max-width: 340px;
+  height: 220px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1.5px solid var(--line);
+  background: #f2ece6;
+  margin: 4px 0;
+  z-index: 0; /* keep Leaflet's layers below anything we overlay later */
+}
+
+.room-map .leaflet-control-attribution {
+  font-size: 9px;
+}
+
+.map-label {
+  background: #fff;
+  border: none;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(31, 26, 23, 0.18);
+  color: var(--text);
+  font: 600 12px/1.2 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  padding: 3px 7px;
+}
