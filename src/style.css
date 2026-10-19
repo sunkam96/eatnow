@@ -4,6 +4,7 @@
   --muted: #6b625c;
   --accent: #e8572a;
   --accent-hover: #cf4718;
+  --line: #e6dbd1;
   --gutter: clamp(20px, 5vw, 32px);
 
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -93,4 +94,76 @@ body {
   font-size: 0.875rem;
   color: var(--muted);
   text-align: center;
+}
+
+button.cta {
+  border: 0;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cta:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.join-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 320px;
+  margin-top: 8px;
+}
+
+.join-form input {
+  font: inherit;
+  font-size: 16px; /* 16px+ stops iPhone Safari zooming in on focus */
+  padding: 14px 18px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  background: #fff;
+  color: var(--text);
+  text-align: center;
+}
+
+.join-form input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.join-form .cta {
+  margin-top: 0;
+}
+
+.form-error {
+  color: var(--accent-hover);
+  font-size: 0.9rem;
+  min-height: 1.2em;
+}
+
+.members {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.members .you {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.status {
+  min-height: 1.2em;
+  font-size: 0.85rem;
 }
