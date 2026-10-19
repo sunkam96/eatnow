@@ -1,6 +1,6 @@
 import './style.css'
 import { renderRoom } from './room'
-import { startNewRoom } from './ui'
+import { renderSetup } from './setup'
 
 const year = document.getElementById('year')
 if (year) year.textContent = String(new Date().getFullYear())
@@ -11,7 +11,7 @@ const hero = document.querySelector<HTMLElement>('.hero')
 
 if (hero && roomMatch) {
   renderRoom(hero, roomMatch[1].toLowerCase())
-} else {
-  const start = document.getElementById('start-room') as HTMLButtonElement | null
-  if (start) start.onclick = () => startNewRoom(start)
+} else if (hero) {
+  const start = document.getElementById('start-room')
+  if (start) start.onclick = () => renderSetup(hero)
 }

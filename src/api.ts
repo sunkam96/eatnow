@@ -1,4 +1,10 @@
-import type { CreateRoomResponse, JoinRoomResponse, RoomView } from './shared/api'
+import type {
+  CreateRoomRequest,
+  CreateRoomResponse,
+  JoinRoomRequest,
+  JoinRoomResponse,
+  RoomView,
+} from './shared/api'
 
 export class ApiError extends Error {
   code: string
@@ -25,16 +31,18 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return body as T
 }
 
-export function createRoom() {
-  return request<CreateRoomResponse>('/api/rooms', { method: 'POST' })
+const postJson = (body: unknown): RequestInit => ({
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(body),
+})
+
+export function createRoom(body: CreateRoomRequest) {
+  return request<CreateRoomResponse>('/api/rooms', postJson(body))
 }
 
-export function joinRoom(roomId: string, name: string) {
-  return request<JoinRoomResponse>(`/api/rooms/${roomId}/join`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name }),
-  })
+export function joinRoom(roomId: string, body: JoinRoomRequest) {
+  return request<JoinRoomResponse>(`/api/rooms/${roomId}/join`, postJson(body))
 }
 
 export function fetchRoom(roomId: string, token: string | null) {
