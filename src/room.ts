@@ -1,5 +1,6 @@
 import { ApiError, fetchRoom, joinRoom } from './api'
 import { CLOSES_HOURS_AFTER_DINNER, MAX_MEMBERS, NAME_MAX_LENGTH, type RoomView } from './shared/api'
+import type { RoomMap } from './map'
 import { neighborhoodName } from './shared/neighborhoods'
 import { clearToken, loadToken, saveToken } from './token'
 import { describeArea, el, field, formatWhen, neighborhoodSelect } from './ui'
@@ -17,8 +18,14 @@ export function renderRoom(hero: HTMLElement, roomId: string) {
   let membersList: HTMLUListElement | null = null
   let countLine: HTMLParagraphElement | null = null
   let statusLine: HTMLParagraphElement | null = null
+  let roomMap: RoomMap | null = null
+  let latestRoom: RoomView | null = null
 
-  const show = (...nodes: Node[]) => hero.replaceChildren(...nodes)
+  const show = (...nodes: Node[]) => {
+    roomMap?.destroy()
+    roomMap = null
+    hero.replaceChildren(...nodes)
+  }
   const isMember = (room: RoomView) => room.members.some((m) => m.you)
 
   function planNewButton(label = 'Plan a new dinner') {
@@ -148,18 +155,28 @@ export function renderRoom(hero: HTMLElement, roomId: string) {
     membersList = el('ul', { className: 'members' })
     countLine = el('p', { className: 'muted' })
     statusLine = el('p', { className: 'muted status' })
-    const share = el('button', { className: 'cta', type: 'button', textContent: 'Share link' })
-    share.onclick = () => shareLink(share, room)
+    const copy = el('button', { className: 'cta', type: 'button', textContent: 'Copy link' })
+    copy.onclick = () => copyLink(copy)
+
+    const mapBox = el('div', { className: 'room-map' })
 
     show(
       el('h1', { textContent: titleOf(room) }),
       el('p', { className: 'tagline', textContent: detailsOf(room) }),
+      mapBox,
       countLine,
       membersList,
-      share,
+      copy,
       el('p', { className: 'muted', textContent: 'Waiting for everyone. Picking a spot comes next.' }),
       statusLine,
     )
+    latestRoom = room
+    // Leaflet is only needed here, so it's loaded on demand to keep the landing page light.
+    import('./map')
+      .then(({ createRoomMap }) => {
+        if (mapBox.isConnected && latestRoom) roomMap = createRoomMap(mapBox, latestRoom)
+      })
+      .catch(() => mapBox.remove())
     updateMembers(room)
     startPolling()
   }
@@ -177,6 +194,8 @@ export function renderRoom(hero: HTMLElement, roomId: string) {
         )
       }),
     )
+    latestRoom = room
+    roomMap?.update(room)
     const n = room.members.length
     countLine.textContent = `${n} coming · room for ${MAX_MEMBERS}`
   }
@@ -227,26 +246,34 @@ export function renderRoom(hero: HTMLElement, roomId: string) {
     }
   })
 
-  async function shareLink(button: HTMLButtonElement, room: RoomView) {
+  // Just copies the room link: no share sheet.
+  async function copyLink(button: HTMLButtonElement) {
     const url = `${window.location.origin}/r/${roomId}`
-    const text = `${titleOf(room)}: ${detailsOf(room)}. Say where you're coming from:`
-    if ('share' in navigator) {
-      try {
-        await navigator.share({ title: 'eat now', text, url })
-        return
-      } catch (err) {
-        if (err instanceof DOMException && err.name === 'AbortError') return
-      }
-    }
-    try {
-      await navigator.clipboard.writeText(url)
-      const label = button.textContent
-      button.textContent = 'Link copied!'
-      window.setTimeout(() => (button.textContent = label), 2000)
-    } catch {
-      window.prompt('Copy this link:', url)
-    }
+    const copied = await copyText(url)
+    const label = button.textContent
+    button.textContent = copied ? 'Link copied!' : "Couldn't copy"
+    window.setTimeout(() => (button.textContent = label), 2000)
   }
 
   load()
+}
+
+// The Clipboard API only works on https or localhost. The textarea fallback
+// also covers plain-http testing, e.g. opening the Mac's network address on a phone.
+async function copyText(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text)
+    return true
+  } catch {
+    const area = document.createElement('textarea')
+    area.value = text
+    area.setAttribute('readonly', '')
+    area.style.position = 'fixed'
+    area.style.opacity = '0'
+    document.body.append(area)
+    area.select()
+    const ok = document.execCommand('copy')
+    area.remove()
+    return ok
+  }
 }
