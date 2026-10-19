@@ -1,12 +1,14 @@
-// POST /api/rooms: create a room and return its id.
+// POST /api/rooms  { hostName, startsAt, area, from }  ->  { roomId, memberToken }
+// The host is the room's first member.
 import type { CreateRoomResponse } from '../../src/shared/api'
-import { errorResponse } from '../lib/http'
+import { errorResponse, readJson } from '../lib/http'
 import { createRoom } from '../lib/rooms'
 
-export default async () => {
+export default async (req: Request) => {
   try {
-    const room = await createRoom()
-    const body: CreateRoomResponse = { roomId: room.id, expiresAt: room.expiresAt }
+    const result = await createRoom(await readJson(req))
+    if (!result.ok) return errorResponse(result.error)
+    const body: CreateRoomResponse = { roomId: result.roomId, memberToken: result.token }
     return Response.json(body, { status: 201 })
   } catch (err) {
     console.error(err)
